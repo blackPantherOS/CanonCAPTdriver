@@ -1,23 +1,24 @@
 #!/bin/bash
 ################################################################################
-# This script will help you uninstall Canon CAPT Printer Driver from a Debian  #
-# based Linux distribution.                                                    #
+#    This script will help you uninstall Canon CAPT Printer Driver from a      #
+#    based Linux distribution.                                                 #
 #                                                                              #
-# @author Radu Cotescu                                                         #
-# @version 2.4                                                                 #
+#    @author Radu Cotescu                                                      #
+#    @version 2.4                                                              #
 #                                                                              #
 # For more details please visit:                                               #
 #   http://radu.cotescu.com/?p=1194                                            #
 ################################################################################
+
 param="$1"
 param_no="$#"
 
 display_usage() {
-	echo "Usage: ./`basename $0` [-h, --help]"
+	echo "Usage, simple run: ./`basename $0`"
 }
 
 check_superuser() {
-	if [[ $USER != "root" ]]; then
+	if [[ "$UID" != "0" ]]; then
 		echo "This script must be run with superuser privileges!"
 		display_usage
 		exit 1
@@ -51,13 +52,13 @@ uninstall() {
 			ccpdadmin -x $installed_model
 			echo "Removing printer from lpadmin..."
 			lpadmin -x $installed_model
+			echo "Disable driver..."
+			services ccpd off
+			echo "Stop service..."
+			services ccpd stop
 			echo "Removing driver..."
-			dpkg -P cndrvcups-capt
-			dpkg -P cndrvcups-common
-			echo "Removing runlevel scripts..."
-			update-rc.d ccpd remove
-			echo "Cleaning redundant packages..."
-			apt-get -y autoremove
+			removing canon-capt-drv
+			removing canon-capt-drv-common
 			echo "Done!"
 		fi
 	else
@@ -66,8 +67,9 @@ uninstall() {
 }
 
 exit_message() {
-	echo -e "Script author: \n\tRadu Cotescu"
-	echo -e "\thttp://radu.cotescu.com"
+	echo -e "\n\tCanon Printer Driver uninstaller"
+	echo -e "\tCharles K. Barcza for blackPanther OS and original script author Radu Cotescu"
+	echo -e "\thttp://www.blackpanther.hu - http://radu.cotescu.com\n"
 }
 
 check_args
