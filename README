@@ -1,5 +1,5 @@
 This script will help you install Canon CAPT Printer Driver 2.00 for
-Debian-based Linux systems using the the 32bit or 64bit OS architecture.
+Linux systems using the the 32bit or 64bit OS architecture.
 
 Current supported printers:
 	* LBP-1120			* LBP3250
@@ -10,10 +10,15 @@ Current supported printers:
 	* LBP3018			* LBP5050
 	* LBP3050			* LBP5100
 	* LBP3100			* LBP5300
-	* LBP3108			* LBP6300dn
-	* LBP3150			* LBP7200C
-	* LBP3200			* LBP9100Cdn
-	* LBP3210
+	* LBP3108			* LBP6000 
+	* LBP3150			* LBP6018
+	* LBP3200			* LBP6020 
+	* LBP3210			* LBP6200 
+	
+	* LBP6300 			* LBP6300dn 
+	* LBP6300n 			* LBP7018C 
+	* LBP7200C 			* LBP7210C 
+	* LBP9100Cdn 			* LBP9200Cdn
 
 Usage instructions:
 	1.	The script must be run with super user privileges, by providing it the
@@ -21,9 +26,9 @@ Usage instructions:
 		address, if your printer supports networked printing.
 	
 		e.g.:
-			sudo ./canonLBP_install.sh LBP2900
+			./canonLBP_install.sh LBP2900
 		or
-			sudo ./canonLBP_install.sh LBP5050 192.168.2.1
+			./canonLBP_install.sh LBP5050 192.168.2.1
 	
 	2.	Follow the messages and the instructions on screen in order to complete
 		the installation.

@@ -14,33 +14,35 @@ param2="$2"
 param_no="$#"
 args=$@
 
-WORKSPACE="`dirname $0`/DEBS"
+WORKSPACE="`dirname $0`/RPMS"
 PRINTER_MODEL=""
 PRINTER_SMODEL=""
 ARCH=""
 IP_REGEX="^([1-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(\.([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])){3}$"
 IP=""
 
-models="LBP-1120 LBP-1210 LBP2900 LBP3000 LBP3010 LBP3018 LBP3050 LBP3100
-LBP3108 LBP3150 LBP3200 LBP3210 LBP3250 LBP3300 LBP3310 LBP3500 LBP5000 LBP5050
-LBP5100 LBP5300 LBP6000 LBP6018 LBP6300dn LBP7200C LBP9100Cdn"
+models="LBP-1120 LBP-1210 LBP2900 LBP3000 LBP3010 LBP3018 LBP3050 LBP3100 LBP3108 
+LBP3150 LBP3200 LBP3210 LBP3250 LBP3300 LBP3310 LBP3500 LBP5000 LBP5050
+LBP5100 LBP5300 LBP6000 LBP6018 LBP6020 LBP6200 LBP6300 LBP6300dn LBP6300n 
+LBP7018C LBP7200C LBP7210C LBP9100Cdn LBP9200Cdn"
 
-usage_message="This script will help you install Canon CAPT Printer Driver \
-2.00 for Debian-based Linux systems using the 32-bit or 64-bit OS architecture.\n"
+usage_message=" This script will help you install Canon CAPT Printer Driver \
+3.21 for blackPanther OS systems using the 32-bit or 64-bit OS architecture.\n"
 
-options="PRINTER_MODEL can be any of the following:\n$models\n\n\
-If an IP is supplied the printer will be accessed from the network at that address.\
- This setting is valid only for printers that support network printing."
+options=" PRINTER_MODEL can be any of the following:\n$models\n\n\
+* If an IP is supplied the printer will be accessed from the network at that address.\
+ This setting is valid only for printers that support network printing. \n"
 
 display_usage() {
-	echo -e "Usage: ./`basename $0` PRINTER_MODEL [IP]\n"
+	echo -e " * Usage: ./`basename $0` PRINTER_MODEL or ./`basename $0` PRINTER_MODEL [IP]\n"
 	echo -e $usage_message | fold -s
 	echo -e $options | fold -s
 }
 
+
 check_superuser() {
-	if [[ $USER != "root" ]]; then
-		echo "This script must be run with superuser privileges!"
+	if [[ $UID != "0" ]]; then
+		echo -e "\nThis script must be run with superuser privileges!\n"
 		display_usage
 		exit 1
 	fi
@@ -55,6 +57,7 @@ check_args() {
 			;;
 			*)
 			for model in $models; do
+				#echo $model$models
 				if [[ $param1 == $model ]]; then
 					PRINTER_MODEL=$param1
 					break;
@@ -76,7 +79,7 @@ check_args() {
 			exit 1
 		fi
 	else
-		echo "Wrong parameter number!"
+		echo -e "\nWrong parameter!\n"
 		display_usage
 		exit 1
 	fi
@@ -84,7 +87,7 @@ check_args() {
 
 check_printer_model() {
 	if [[ -z $PRINTER_MODEL ]]; then
-		echo -e "Error: Unkown printer model!\n"
+		echo -e "\nError: Unkown printer model!\n"
 		display_usage
 		exit 1
 	fi
@@ -109,6 +112,9 @@ check_printer_model() {
 	;;
 	"LBP9100Cdn")
 		PRINTER_SMODEL="LBP9100C"
+	;;
+	"LBP9200Cdn")
+		PRINTER_SMODEL="LBP9200C"
 	;;
 	*)
 		PRINTER_SMODEL=$PRINTER_MODEL
@@ -145,29 +151,37 @@ install_driver() {
 	else
 		ARCH="i386"
 	fi
-	cndrv_common="cndrvcups-common_2.20-1_${ARCH}.deb"
-	cndrv_capt="cndrvcups-capt_2.20-1_${ARCH}.deb"
+	cndrv_common="canon-capt-drv-common"
+	cndrv_capt="canon-capt-drv"
 	echo "Installing driver for model: $PRINTER_MODEL"
-	echo "using file: CNCUPS${PRINTER_SMODEL}CAPTK.ppd"
-	echo "Installing packages..."
-	check_requirements_for_release
-	if [[ -e $WORKSPACE/$ARCH/$cndrv_common ]]; then
-		dpkg -i $WORKSPACE/$ARCH/$cndrv_common
-	else
-		echo "$cndrv_common is missing from $WORKSPACE/$ARCH folder!"
-		exit 1
+	echo "Using file: CNCUPS${PRINTER_SMODEL}CAPTK.ppd"
+	#check_requirements_for_release
+	if [[ -e $(find $WORKSPACE/$ARCH/ -name "${cndrv_common}*.rpm" 2>/dev/null) ]]; then
+		echo "Installing local packages..."
+		installing "$WORKSPACE/$ARCH/$cndrv_common"*.rpm
+	else	
+		echo "Installing remote packages..."
+		installing $cndrv_common
+		ret=$?
+		if [ "$ret" = '1' -o "1" = "$(rpm -q $cndrv_common 2>/dev/null || echo 1)" ];then
+		    echo "$cndrv_common is missing !"
+		    exit 1
+		fi
 	fi
-	if [[ -e $WORKSPACE/$ARCH/$cndrv_capt ]]; then
-		dpkg -i $WORKSPACE/$ARCH/$cndrv_capt
+	if [[ -e $(find $WORKSPACE/$ARCH/ -name "${cndrv_capt}*.rpm" 2>/dev/null) ]]; then
+		echo "Installing local packages..."
+		installing $WORKSPACE/$ARCH/$cndrv_capt
 	else
-		echo "$cndrv_capt is missing from $WORKSPACE/$ARCH folder!"
-		exit 1
+		echo "Installing remote packages..."
+		installing $cndrv_capt
+		ret=$?
+		if [ "$ret" = '1' -o "1" = "$(rpm -q $cndrv_capt 2>/dev/null || echo 1)" ];then
+		    echo "$cndrv_capt is missing!"
+		    exit 1
+		fi
 	fi
-	echo "Modifying the default /etc/init.d/ccpd file..."
-	cp -f $WORKSPACE/ccpd /etc/init.d/
-	chmod a+x /etc/init.d/ccpd
 	echo "Restarting CUPS..."
-	/etc/init.d/cups restart
+	services cups restart
 	echo "Setting the printer for CUPS..."
 	/usr/sbin/lpadmin -p $PRINTER_MODEL -P /usr/share/cups/model/CNCUPS${PRINTER_SMODEL}CAPTK.ppd -v ccp://localhost:59687 -E
 	echo "Setting the printer for CAPT..."
@@ -177,12 +191,12 @@ install_driver() {
 		/usr/sbin/ccpdadmin -p $PRINTER_MODEL -o "net:$IP"
 	fi
 	echo "Setting CAPT to boot with the system..."
-	update-rc.d ccpd defaults 50
+	services ccpd on
 	echo "Starting ccpd..."
-	/etc/init.d/ccpd start
+	services ccpd start
 	sleep 2
 	echo "Checking status:"
-	/etc/init.d/ccpd status
+	services ccpd status
 	echo -e "\nPower on your printer! :)"
 	echo "Go to System - Administration - Printing and do the following:"
 	echo "  1. disable $PRINTER_MODEL-2 but do not delete it since Ubuntu will recreate it automatically;"
@@ -191,8 +205,8 @@ install_driver() {
 }
 
 exit_message() {
-	echo -e "Script author: \n\tRadu Cotescu"
-	echo -e "\thttp://radu.cotescu.com"
+	echo -e "Script authors: \n\tRadu Cotescu - Charles K. Barcza"
+	echo -e "\thttp://radu.cotescu.com - http://www.blackpanther.hu"
 }
 
 check_args
